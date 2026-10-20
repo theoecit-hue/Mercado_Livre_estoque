@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Minha vitrine de ofertas</title>
+<style>
+:root{--bg:#f6f6f8;--card:#fff;--tx:#1d1d28;--mu:#6b6b7a;--bd:#e2e2ea;--ac:#2d3277;--hd:#ffe600;--hdt:#2d3277}
+@media (prefers-color-scheme:dark){:root{color-scheme:dark;--bg:#14141b;--card:#1f1f2a;--tx:#f0f0f5;--mu:#a0a0b2;--bd:#34344a;--ac:#9aa4ff}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--tx);font:16px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+header{background:var(--hd);color:var(--hdt);padding:28px 16px;text-align:center}
+header h1{margin:0;font-size:26px}header p{margin:6px 0 0;font-size:15px}
+main{max-width:1000px;margin:0 auto;padding:20px 16px 40px}
+.chips{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px}
+.chip{border:1px solid var(--bd);background:var(--card);color:var(--tx);padding:7px 14px;border-radius:999px;cursor:pointer;font:inherit;font-size:14px}
+.chip.on{background:var(--ac);color:var(--bg);border-color:var(--ac)}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:16px}
+.card{background:var(--card);border:1px solid var(--bd);border-radius:12px;overflow:hidden;display:flex;flex-direction:column}
+.img{aspect-ratio:1/1;background:var(--bd);display:flex;align-items:center;justify-content:center;color:var(--mu);font-size:13px}
+.img img{width:100%;height:100%;object-fit:contain;background:#fff}
+.body{padding:12px;display:flex;flex-direction:column;gap:6px;flex:1}
+.tag{font-size:12px;color:var(--ac)}
+.name{font-size:15px;line-height:1.35;margin:0}
+.price{font-size:20px;font-weight:600;margin-top:auto}
+.btn{display:block;text-align:center;text-decoration:none;background:var(--ac);color:var(--bg);padding:10px;border-radius:8px;font-size:15px}
+.empty{color:var(--mu);text-align:center;padding:40px 0}
+.note{color:var(--mu);font-size:13px;text-align:center;margin-top:28px}
+</style>
+</head>
+<body>
+<header><h1>Minha vitrine de ofertas</h1><p>Produtos selecionados no Mercado Livre</p></header>
+<main>
+<div id="app"><div class="empty">Carregando...</div></div>
+<p class="note">Como afiliado, posso receber comissão pelas compras feitas pelos links desta página, sem custo extra para você. Preços e disponibilidade podem mudar no Mercado Livre.</p>
+</main>
+<script>
+var items=[],filter='all',app=document.getElementById('app');
+function el(t,c,x){var e=document.createElement(t);if(c)e.className=c;if(x!=null)e.textContent=x;return e}
+function okUrl(u){return /^https?:\/\//i.test(u||'')}
+function render(){
+  app.textContent='';
+  var chips=el('div','chips');
+  [['all','Todos'],['afiliado','Ofertas do Mercado Livre'],['proprio','Meus produtos']].forEach(function(f){
+    var b=el('button','chip'+(filter===f[0]?' on':''),f[1]);
+    b.onclick=function(){filter=f[0];render()};chips.appendChild(b)});
+  app.appendChild(chips);
+  var list=items.filter(function(i){return okUrl(i.link)&&(filter==='all'||i.tipo===filter)});
+  if(!list.length){app.appendChild(el('div','empty','Em breve, novos produtos por aqui.'));return}
+  var g=el('div','grid');
+  list.forEach(function(p){
+    var c=el('div','card'),im=el('div','img');
+    if(okUrl(p.img)){var i=document.createElement('img');i.src=p.img;i.alt=p.nome;i.loading='lazy';i.referrerPolicy='no-referrer';im.appendChild(i)}else im.textContent='Sem imagem';
+    var b=el('div','body');
+    b.appendChild(el('div','tag',p.tipo==='afiliado'?'Oferta Mercado Livre':'Produto próprio'));
+    b.appendChild(el('h3','name',p.nome));
+    if(p.preco)b.appendChild(el('div','price',p.preco));
+    var a=el('a','btn',p.tipo==='afiliado'?'Ver no Mercado Livre':'Comprar');
+    a.href=p.link;a.target='_blank';a.rel='sponsored noopener noreferrer';b.appendChild(a);
+    c.appendChild(im);c.appendChild(b);g.appendChild(c)});
+  app.appendChild(g);
+}
+fetch('/api/produtos').then(function(r){return r.json()}).then(function(d){items=Array.isArray(d)?d:[];render()}).catch(function(){items=[];render()});
+</script>
+</body>
+</html>
