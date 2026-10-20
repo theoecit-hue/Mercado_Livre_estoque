@@ -7,22 +7,14 @@ const supabase = createClient(
   process.env.SUPABASE_SERVICE_ROLE_KEY
 );
 
-function senhaOk(s) {
-  const p = process.env.ADMIN_PASSWORD;
-  if (!p) return false;
-  const a = Buffer.from(String(s || '')), b = Buffer.from(p);
-  return a.length === b.length && crypto.timingSafeEqual(a, b);
-}
 const okUrl = (u) => { try { return /^https?:$/.test(new URL(u).protocol); } catch { return false; } };
 const txt = (v, n) => String(v || '').trim().slice(0, n);
 
 module.exports = async (req, res) => {
   if (req.method !== 'POST') return res.status(405).json({ erro: 'metodo' });
   const b = req.body || {};
-  if (!senhaOk(b.senha)) { 
-    await new Promise((r) => setTimeout(r, 1200)); 
-    return res.status(401).json({ erro: 'Senha incorreta' }); 
-  }
+  
+  // SEM VERIFICAÇÃO DE SENHA - ACESSO LIVRE
 
   try {
     if (b.acao === 'add') {
@@ -45,7 +37,6 @@ module.exports = async (req, res) => {
         erro,
         position: 0
       };
-      // joga todos pra baixo e insere no topo
       const { data: atuais } = await supabase.from('products').select('id,position').order('position');
       if (atuais) {
         for (let i = 0; i < atuais.length; i++) {
@@ -80,7 +71,6 @@ module.exports = async (req, res) => {
       }
     }
 
-    // LIST (sempre retorna no final)
     const { data: final, error } = await supabase.from('products').select('*').order('position', { ascending: true });
     if (error) throw error;
 

@@ -32,13 +32,7 @@ details{margin-top:6px}summary{cursor:pointer;font-size:14px;color:var(--mu)}
 </head>
 <body>
 <main>
-<div id="gate" class="box" style="max-width:360px;margin:60px auto">
-  <h1>Área do dono</h1>
-  <p class="mu">Digite a senha para continuar.</p>
-  <form id="fg" style="grid-template-columns:1fr"><input id="pw" type="password" autocomplete="current-password" placeholder="Senha" autofocus><button type="submit">Entrar</button></form>
-  <div id="ge" class="err"></div>
-</div>
-<div id="panel" hidden>
+<div id="panel">
   <h1>Painel do dono</h1>
   <p class="mu">Cole o link do produto. O site busca nome, foto e preço sozinho e se atualiza.</p>
   <div class="box">
@@ -54,14 +48,11 @@ details{margin-top:6px}summary{cursor:pointer;font-size:14px;color:var(--mu)}
   </div>
   <div class="box"><h2>Seus produtos (<span id="cnt">0</span>)</h2><div id="list"></div>
     <div class="acts" style="margin-top:10px"><button class="sec" id="rf">Atualizar preços agora</button></div></div>
-  <button class="sec" id="exit">Sair</button>
 </div>
 </main>
 <script>
-var $=function(i){return document.getElementById(i)},senha='';
-try{senha=sessionStorage.getItem('vs')||''}catch(e){}
+var $=function(i){return document.getElementById(i)};
 function call(body){
-  body.senha=senha;
   return fetch('/api/admin',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)}).then(function(r){return r.json().then(function(j){if(!r.ok)throw new Error(j.erro||'Erro');return j})});
 }
 function draw(items){
@@ -82,15 +73,13 @@ function draw(items){
     r.appendChild(a);l.appendChild(r)});
 }
 function act(b){return call(b).then(draw).catch(function(e){$('fe').textContent=e.message})}
-function entrar(){return call({acao:'list'}).then(function(d){$('gate').hidden=true;$('panel').hidden=false;draw(d);try{sessionStorage.setItem('vs',senha)}catch(e){}return true})}
-$('fg').onsubmit=function(e){e.preventDefault();senha=$('pw').value;$('ge').textContent='';entrar().catch(function(x){$('ge').textContent=x.message;$('pw').value='';senha=''})};
+function inicial(){call({acao:'list'}).then(draw).catch(function(e){$('fe').textContent=e.message})}
 $('f').onsubmit=function(e){
   e.preventDefault();var f=$('f'),b=$('fb');b.disabled=true;b.textContent='Buscando dados...';$('fe').textContent='';
   call({acao:'add',link:f.link.value.trim(),tipo:f.tipo.value,nome:f.nome.value,preco:f.preco.value,img:f.img.value}).then(function(d){draw(d);f.reset()}).catch(function(x){$('fe').textContent=x.message}).then(function(){b.disabled=false;b.textContent='Adicionar'});
 };
 $('rf').onclick=function(){act({acao:'refresh'});$('fe').textContent='Os preços serão buscados de novo na próxima visita ao site.'};
-$('exit').onclick=function(){try{sessionStorage.removeItem('vs')}catch(e){}location.reload()};
-if(senha)entrar().catch(function(){senha=''});
+inicial();
 </script>
 </body>
 </html>
